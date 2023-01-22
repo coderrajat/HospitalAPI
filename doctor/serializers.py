@@ -7,13 +7,13 @@ from invoice import models as invoice_models
 
 
 
-class Appointment_serializer(serializers.ModelSerializer):
-    class Meta():
-        model=doctor_models.DoctorAppoinment
-        exclude=('doctor','hospital_name')
+# class Appointment_serializer(serializers.ModelSerializer):
+#     class Meta():
+#         model=doctor_models.DoctorAppoinment
+#         exclude=('doctor','hospital_name')
         
 
-class doctor_serializer(serializers.ModelSerializer):
-    class Meta():
-        model=doctor_models.Doctordetails
-        fields=('__all__')
+# class doctor_serializer(serializers.ModelSerializer):
+#     class Meta():
+#         model=doctor_models.Doctordetails
+#         fields=('__all__')
