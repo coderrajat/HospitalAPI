@@ -97,6 +97,7 @@ def validate(val):
             params={'val': val},
         )
 
+#User's Serializer start
 
 class Create_User_form(serializers.Serializer):
     first_name=serializers.CharField(required=False)
@@ -122,4 +123,33 @@ class User_login_forms(serializers.ModelSerializer):
     phone_number=serializers.CharField(required=False)
     class Meta():
         model=account_models.User
+        fields=('__all__')
+
+#User's Serializer end
+
+#Doctor's Serializer start
+class Doctors_login_forms(serializers.ModelSerializer):
+    phone_number=serializers.CharField(required=False)
+    class Meta():
+        model=account_models.Doctor
+        fields=('__all__')
+
+class Create_Doctor_form(serializers.Serializer):
+    first_name=serializers.CharField(required=False)
+    last_name=serializers.CharField(required=False)
+    email=serializers.CharField(required=True)
+    education=serializers.CharField(required=True)
+    spacilist=serializers.CharField(required=True)
+    country_code=serializers.IntegerField(required=True)
+    phone_number=serializers.IntegerField(required=True)
+    city=serializers.CharField()
+    state=serializers.CharField()
+    country=serializers.CharField()
+    address1=serializers.CharField()
+    address2=serializers.CharField()
+
+
+class Admin_login_forms(serializers.Serializer):
+    class Meta():
+        model=account_models.Admin
         fields=('__all__')

@@ -3,16 +3,12 @@ from . import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.mail import send_mail
 import random
 from django.db.models import Q
 from doctor import models as doctor_models
 import pytz,datetime
 import secrets
 import bcrypt
-from google.auth.transport import requests
-from google.oauth2 import id_token
-import jwt
 
 from .tools import  code, decode, codetoken, decodetoken, get_user, get_base64_to_img
 
@@ -225,8 +221,8 @@ class User_Login(APIView):
 
 
 
-class Doctor_SignUp(APIView):
-    """This class use to Create the user account or it takes the Signup details """
+class Doctor_SignUp(APIView):  
+    """This class use to Create the Doctors account but Its verify by the admin side"""
     def get(self,request):
         f0=serializers.Password()
         f1=serializers.Create_User_form()
@@ -292,7 +288,9 @@ class Doctor_SignUp(APIView):
                 uzr=models.User()
                 uzr.first_name=request.POST['first_name']
                 uzr.last_name=request.POST['last_name']
-                uzr.user_type='User'
+                uzr.user_type='Doctor'
+                uzr.Education= request.POST['Education'] #This field use to showing doctor degree as the badge
+                uzr.specilist_type=request.POST['specilist']
                 uzr.country_code=request.POST['country_code']
                 uzr.phone_number=request.POST['phone_number']
                 uzr.email=request.POST['email']
@@ -348,7 +346,7 @@ class Doctor_Login(APIView):
     def post(self,request):
         f1=serializers.Login(data=request.data)
         if (f1.is_valid()):
-            user=list(models.User.objects.filter(email=request.POST['email']))
+            user=list(models.Doctor.objects.filter(email=request.POST['email']))
             if user!=[]:
                 user=user[0]
             else:
@@ -373,14 +371,78 @@ class Doctor_Login(APIView):
                     sec+=secrets.choice(secrets.choice([chr(ii) for ii in range(45,123)]))
 
                 user.token.token=sec
-                print(sec,'sec')
+                #print(sec,'sec')
                 user.last_login=datetime.datetime.now()
                 user.token.save()
                 re=login_user(user.id,token=sec)
                 return Response({'success':'true',
                                     'error_msg':'',
                                     'errors':{},
-                                    'response':{'user':[serializers.User_login_forms(user).data],},
+                                    'response':{'user':[serializers.Doctors_login_forms(user).data],},
+                                    'token':re,
+                                    # 'auth':{'sessionid':request.session.session_key,
+                                    #         'csrftoken':request.META['CSRF_COOKIE']
+
+
+                                },status=status.HTTP_202_ACCEPTED)
+
+            return Response({'success':'false',
+                                'error_msg':'user_not_authenticated',
+                                'response':{},
+                                'errors':dict(f1.errors),
+
+                                },status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'success':'false',
+                                'error_msg':'Invalid username and password',
+                                'errors':dict(f1.errors),
+                                'response':{},
+                                },status=status.HTTP_400_BAD_REQUEST)
+                            
+
+
+class Admin_Login(APIView):
+    """This class halp admin can login /Note=Admin account create during Development than next subadmin or admin create by admin according to rolls"""
+    def get(self,request):
+        f1=serializers.Login()
+        return Response(f1.data,status=status.HTTP_202_ACCEPTED)
+
+    def post(self,request):
+        f1=serializers.Login(data=request.data)
+        if (f1.is_valid()):
+            user=list(models.Admin.objects.filter(email=request.POST['email']))
+            if user!=[]:
+                user=user[0]
+            else:
+                return Response({'success':'false',
+                                    'error_msg':'User does not exist',
+                                    'errors':'Invalid email',
+                                    'response':{},
+
+                                },status=status.HTTP_400_BAD_REQUEST)
+            if (user.is_active==False):
+                return Response({'success':'false',
+                                    'error_msg':'Your account is not active',
+                                    'errors':'',
+                                    'response':{},
+
+                                },status=status.HTTP_400_BAD_REQUEST)
+            password=str(request.POST['password']).encode('utf-8')
+            hash_pass=user.password.encode('utf-8')
+            if bcrypt.checkpw(password,hash_pass):
+                sec=''
+                for i in range(10):
+                    sec+=secrets.choice(secrets.choice([chr(ii) for ii in range(45,123)]))
+
+                user.token.token=sec
+                #print(sec,'sec')
+                user.last_login=datetime.datetime.now()
+                user.token.save()
+                re=login_user(user.id,token=sec)
+                return Response({'success':'true',
+                                    'error_msg':'',
+                                    'errors':{},
+                                    'response':{'user':[serializers.Admin_login_forms(user).data],},
                                     'token':re,
                                     # 'auth':{'sessionid':request.session.session_key,
                                     #         'csrftoken':request.META['CSRF_COOKIE']

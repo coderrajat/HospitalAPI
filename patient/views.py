@@ -1,4 +1,3 @@
-from distutils.log import error
 from . import models as doctor_models
 from invoice import models as invoice_models
 from django.db.models import Q,F
@@ -6,13 +5,11 @@ from . import serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.serializers import serialize
-from django.http import HttpResponse
 from accounts.tools import code, decode, codetoken, decodetoken, get_user
 import datetime,pytz
 
 
-def is_authenticate(*Dargs,**Dkwargs):
+def is_authenticate(*Dargs,**Dkwargs):   #this function use to decode and encode the token and give the response according to the output
     def inner(fun):
         def wrapper(*args,**kwargs):
             if 'HTTP_AUTHORIZATION'in args[1].META :
@@ -21,11 +18,9 @@ def is_authenticate(*Dargs,**Dkwargs):
                     time=datetime.datetime.strptime(data[2].split('.')[0],'%Y-%m-%d %H:%M:%S')
                 except Exception as e:
                     return Response({'success':'false','error_msg':'invalid token','errors':{},'response':{}},status=status.HTTP_401_UNAUTHORIZED)
-                    
-                print(data,time)
                 if len(data)==4 and time>datetime.datetime.now():
                     uzr= get_user(*data)
-                    print(uzr)
+                    print(uzr.user_type,'adfafafafdfaf')
                     if uzr!=[]:
                         if uzr.is_user_blocked :
                             return Response({'success':'false',
